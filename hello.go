@@ -2,15 +2,19 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/ydhnwb/golang_api/config"
-	//"github.com/ydhnwb/golang_api/controller"
+	"github.com/4301104179/minhtiengolang/config"
+	"github.com/4301104179/minhtiengolang/controller"
+	"github.com/4301104179/minhtiengolang/repository"
+	"github.com/4301104179/minhtiengolang/service"
 	"gorm.io/gorm"
-	//"fmt"
 )
 
 var (
 	db             *gorm.DB                  = config.SetupDatabaseConnection()
-	//authController controller.AuthController = controller.NewAuthController()
+	authController controller.AuthController = controller.NewAuthController()
+	bookRepository repository.BookRepository = repository.NewBookRepository(db)
+	bookService    service.BookService       = service.NewBookService(bookRepository)
+	bookController controller.BookController = controller.NewBookController(bookService)
 )
 
 // func main() {
@@ -23,8 +27,17 @@ func main() {
 
 	authRoutes := r.Group("api/auth")
 	{
-        authRoutes.POST("/login")
-		authRoutes.POST("/register")
+        authRoutes.POST("/login", authController.Login)
+		authRoutes.POST("/register", authController.Register)
+	}
+
+	bookRoutes := r.Group("api/books")
+	{
+		bookRoutes.GET("/", bookController.All)
+		bookRoutes.POST("/", bookController.Insert)
+		bookRoutes.GET("/:id", bookController.FindByID)
+		bookRoutes.PUT("/:id", bookController.Update)
+		bookRoutes.DELETE("/:id", bookController.Delete)
 	}
 	
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
